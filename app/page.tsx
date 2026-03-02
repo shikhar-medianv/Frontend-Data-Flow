@@ -1,8 +1,7 @@
-import Counter from "./components/Counter";
+"use client";
 
 export default function Home() {
-
   return (
-    <Counter></Counter>
+    <h1>This is Home page</h1>
   );
 }
