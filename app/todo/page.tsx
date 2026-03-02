@@ -1,17 +1,16 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-
-type Priority = "low" | "medium" | "high";
-type Filter = "all" | "active" | "completed";
-
-interface Todo {
-    id: string;
-    text: string;
-    completed: boolean;
-    priority: Priority;
-    createdAt: number;
-}
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import {
+    addTodo,
+    toggleTodo,
+    deleteTodo,
+    clearCompleted,
+    setFilter,
+    setSelectedPriority,
+} from "../store/todoSlice";
+import type { Priority, Filter } from "../store/todoSlice";
 
 const PRIORITY_STYLES: Record<Priority, string> = {
     low: "text-emerald-700 bg-emerald-100 border-emerald-300",
@@ -26,42 +25,29 @@ const PRIORITY_BTN_ACTIVE: Record<Priority, string> = {
 };
 
 export default function TodoPage() {
-    const [todos, setTodos] = useState<Todo[]>([]);
+    const dispatch = useAppDispatch();
+
+    // Redux state
+    const todos = useAppSelector((state) => state.todos.todos);
+    const filter = useAppSelector((state) => state.todos.filter);
+    const selectedPriority = useAppSelector((state) => state.todos.selectedPriority);
+
+    // Local UI-only state
     const [input, setInput] = useState("");
-    const [priority, setPriority] = useState<Priority>("medium");
-    const [filter, setFilter] = useState<Filter>("all");
     const [mounted, setMounted] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
-        const stored = localStorage.getItem("todos-nextapp");
-        if (stored) setTodos(JSON.parse(stored));
         setMounted(true);
     }, []);
 
-    useEffect(() => {
-        if (mounted) localStorage.setItem("todos-nextapp", JSON.stringify(todos));
-    }, [todos, mounted]);
-
-    const addTodo = () => {
+    const handleAddTodo = () => {
         const trimmed = input.trim();
         if (!trimmed) return;
-        setTodos((prev) => [
-            { id: crypto.randomUUID(), text: trimmed, completed: false, priority, createdAt: Date.now() },
-            ...prev,
-        ]);
+        dispatch(addTodo({ text: trimmed, priority: selectedPriority }));
         setInput("");
         inputRef.current?.focus();
     };
-
-    const toggleTodo = (id: string) =>
-        setTodos((prev) => prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
-
-    const deleteTodo = (id: string) =>
-        setTodos((prev) => prev.filter((t) => t.id !== id));
-
-    const clearCompleted = () =>
-        setTodos((prev) => prev.filter((t) => !t.completed));
 
     const filteredTodos = todos.filter((t) =>
         filter === "active" ? !t.completed : filter === "completed" ? t.completed : true
@@ -88,6 +74,7 @@ export default function TodoPage() {
                         ✅ My Tasks
                     </h1>
                     <p className="text-violet-400 mt-2 text-sm font-medium">Stay organized, stay happy! 🌈</p>
+                    <p className="text-slate-400 mt-1 text-xs font-medium tracking-wide">⚡ Powered by Redux Toolkit</p>
                 </div>
 
                 {/* Stats Bar */}
@@ -115,7 +102,7 @@ export default function TodoPage() {
                         value={input}
                         placeholder="What needs to be done? 🎯"
                         onChange={(e) => setInput(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && addTodo()}
+                        onKeyDown={(e) => e.key === "Enter" && handleAddTodo()}
                         className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-slate-700 placeholder-slate-400 outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-100 transition-all text-base"
                     />
 
@@ -125,8 +112,8 @@ export default function TodoPage() {
                         {(["low", "medium", "high"] as Priority[]).map((p) => (
                             <button
                                 key={p}
-                                onClick={() => setPriority(p)}
-                                className={`px-3 py-1 rounded-full border text-xs font-bold capitalize transition-all ${priority === p
+                                onClick={() => dispatch(setSelectedPriority(p))}
+                                className={`px-3 py-1 rounded-full border text-xs font-bold capitalize transition-all ${selectedPriority === p
                                         ? PRIORITY_BTN_ACTIVE[p]
                                         : "text-slate-400 border-slate-200 bg-white hover:border-slate-300"
                                     }`}
@@ -135,7 +122,7 @@ export default function TodoPage() {
                             </button>
                         ))}
                         <button
-                            onClick={addTodo}
+                            onClick={handleAddTodo}
                             className="ml-auto px-5 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-pink-500 text-white font-bold text-sm shadow-md shadow-violet-200 hover:scale-105 hover:shadow-violet-300 transition-all active:scale-95"
                         >
                             + Add Task
@@ -148,7 +135,7 @@ export default function TodoPage() {
                     {(["all", "active", "completed"] as Filter[]).map((f) => (
                         <button
                             key={f}
-                            onClick={() => setFilter(f)}
+                            onClick={() => dispatch(setFilter(f))}
                             className={`flex items-center gap-1.5 px-4 py-1.5 rounded-xl border text-sm font-bold capitalize transition-all ${filter === f
                                     ? "bg-violet-500 text-white border-violet-500 shadow-md shadow-violet-200"
                                     : "text-slate-500 border-slate-200 bg-white hover:border-violet-300 hover:text-violet-500"
@@ -162,7 +149,7 @@ export default function TodoPage() {
                     ))}
                     {completedCount > 0 && (
                         <button
-                            onClick={clearCompleted}
+                            onClick={() => dispatch(clearCompleted())}
                             className="ml-auto px-3 py-1.5 rounded-xl border border-rose-300 bg-rose-50 text-rose-500 text-xs font-bold hover:bg-rose-100 transition-colors"
                         >
                             Clear Completed
@@ -192,7 +179,7 @@ export default function TodoPage() {
                             >
                                 {/* Checkbox */}
                                 <button
-                                    onClick={() => toggleTodo(todo.id)}
+                                    onClick={() => dispatch(toggleTodo(todo.id))}
                                     aria-label="Toggle todo"
                                     className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center flex-shrink-0 transition-all ${todo.completed
                                             ? "bg-gradient-to-br from-violet-500 to-pink-500 border-transparent shadow-sm"
@@ -213,15 +200,13 @@ export default function TodoPage() {
                                 </span>
 
                                 {/* Priority Badge */}
-                                <span
-                                    className={`px-2.5 py-0.5 rounded-full border text-xs font-bold capitalize flex-shrink-0 ${PRIORITY_STYLES[todo.priority]}`}
-                                >
+                                <span className={`px-2.5 py-0.5 rounded-full border text-xs font-bold capitalize flex-shrink-0 ${PRIORITY_STYLES[todo.priority]}`}>
                                     {todo.priority}
                                 </span>
 
                                 {/* Delete */}
                                 <button
-                                    onClick={() => deleteTodo(todo.id)}
+                                    onClick={() => dispatch(deleteTodo(todo.id))}
                                     aria-label="Delete todo"
                                     className="text-slate-300 hover:text-rose-400 transition-colors text-sm px-1.5 py-1 rounded-md flex-shrink-0 hover:bg-rose-50"
                                 >

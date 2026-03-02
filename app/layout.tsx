@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
+import StoreProvider from "./StoreProvider";
 
 export const metadata: Metadata = {
   title: "Routing Example",
@@ -22,7 +23,9 @@ export default function RootLayout({
           <Link href="/todo">Todo</Link>
         </nav>
         <hr />
-        {children}
+        <StoreProvider>
+          {children}
+        </StoreProvider>
       </body>
     </html>
   );
