@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "start:backend": "npm run --prefix todo-backend start:dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
@@ -13,7 +14,8 @@
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",
-    "react-redux": "^9.2.0"
+    "react-redux": "^9.2.0",
+    "socket.io-client": "^4.8.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

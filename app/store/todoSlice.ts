@@ -17,18 +17,8 @@ interface TodoState {
     selectedPriority: Priority;
 }
 
-const loadFromStorage = (): Todo[] => {
-    if (typeof window === "undefined") return [];
-    try {
-        const stored = localStorage.getItem("todos-nextapp");
-        return stored ? JSON.parse(stored) : [];
-    } catch {
-        return [];
-    }
-};
-
 const initialState: TodoState = {
-    todos: loadFromStorage(),
+    todos: [],
     filter: "all",
     selectedPriority: "medium",
 };
@@ -62,6 +52,9 @@ const todoSlice = createSlice({
         setSelectedPriority: (state, action: PayloadAction<Priority>) => {
             state.selectedPriority = action.payload;
         },
+        setTodos: (state, action: PayloadAction<Todo[]>) => {
+            state.todos = action.payload;
+        },
     },
 });
 
@@ -72,6 +65,7 @@ export const {
     clearCompleted,
     setFilter,
     setSelectedPriority,
+    setTodos,
 } = todoSlice.actions;
 
 export default todoSlice.reducer;

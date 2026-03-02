@@ -1,22 +1,13 @@
-import { configureStore, Middleware } from "@reduxjs/toolkit";
+import { configureStore } from "@reduxjs/toolkit";
 import todoReducer from "./todoSlice";
-
-// Middleware: persist todos to localStorage on every state change
-const localStorageMiddleware: Middleware = (storeAPI) => (next) => (action) => {
-    const result = next(action);
-    const { todos } = storeAPI.getState().todos;
-    if (typeof window !== "undefined") {
-        localStorage.setItem("todos-nextapp", JSON.stringify(todos));
-    }
-    return result;
-};
+import { socketMiddleware } from "./socketMiddleware";
 
 export const store = configureStore({
     reducer: {
         todos: todoReducer,
     },
     middleware: (getDefaultMiddleware) =>
-        getDefaultMiddleware().concat(localStorageMiddleware),
+        getDefaultMiddleware().concat(socketMiddleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;
