@@ -1,5 +1,3 @@
-export default function Home() {
-    return (
-        <h1>Contact</h1>
-    )
+export default function Contact() {
+    return <h1>Contact Page</h1>;
 }

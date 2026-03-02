@@ -1,5 +1,7 @@
-export default function Home() {
+import Counter from "@/app/components/Counter";
+
+export default function Info() {
     return (
-        <h1>This is info page</h1>
+        <Counter />
     )
 }
